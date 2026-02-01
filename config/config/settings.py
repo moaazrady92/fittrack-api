@@ -36,6 +36,7 @@ INSTALLED_APPS = [
     'users',
     'workouts',
     'rest_framework',
+    'rest_framework.authtoken',
     'django.contrib.admin',
     'django.contrib.auth',
     'django.contrib.contenttypes',
