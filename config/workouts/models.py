@@ -9,7 +9,7 @@ class Workout(models.Model):
         ('HIIT','HIIT'),
         ('FLEX','flexibility'),
     ]
-    user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='workouts')
+    user = models.ForeignKey('users.User', on_delete=models.CASCADE, related_name='workouts')
     date = models.DateField()
     duration = models.PositiveIntegerField(help_text='duration in minutes')
     workout_type = models.CharField(max_length=4, choices=WORKOUT_TYPES, default='STR')
