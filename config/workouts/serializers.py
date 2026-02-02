@@ -23,3 +23,10 @@ class WorkoutSerializer(serializers.ModelSerializer):
     def create(self, validated_data):
         validated_data['user'] = self.context['request'].user
         return super().create(validated_data)
+
+    def validate_duration(self,value):
+        if value < 1:
+            raise serializers.ValidationError('Workout duration must be greater than a minute')
+        if value > 240:
+            raise serializers.ValidationError('Workout duration must be less than 240 minutes')
+        return value

@@ -10,7 +10,7 @@ class Food(models.Model):
         ('DIN', 'Dinner'),
     ]
 
-    user = models.ForeignKey('user.User', on_delete=models.CASCADE, related_name='food')
+    user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='food')
     name = models.CharField(max_length=200)
     meal_type = models.CharField(max_length=3, choices=MEAL_TYPE)
     calories = models.PositiveIntegerField()

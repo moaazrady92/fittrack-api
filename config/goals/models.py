@@ -19,7 +19,7 @@ class Goal(models.Model):
         ('FAILED', 'Failed'),
     ]
 
-    user = models.ForeignKey('user.User', on_delete=models.CASCADE,related_name='goals')
+    user = models.ForeignKey(User, on_delete=models.CASCADE,related_name='goals')
     title = models.CharField(max_length=200)
     goal_type = models.CharField(max_length=200, choices=GOAL_TYPES)
     description = models.TextField(blank=True)

@@ -1,3 +1,4 @@
+from django.core.validators import MinValueValidator
 from django.db import models
 from django.contrib.auth.models import User
 # Create your models here.
@@ -11,7 +12,7 @@ class Workout(models.Model):
     ]
     user = models.ForeignKey('users.User', on_delete=models.CASCADE, related_name='workouts')
     date = models.DateField()
-    duration = models.PositiveIntegerField(help_text='duration in minutes')
+    duration = models.PositiveIntegerField(help_text='duration in minutes', validators=[MinValueValidator(1)])
     workout_type = models.CharField(max_length=4, choices=WORKOUT_TYPES, default='STR')
     notes = models.TextField(blank=True)
     created_at = models.DateTimeField(auto_now_add=True)
