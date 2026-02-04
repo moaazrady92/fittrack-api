@@ -20,6 +20,7 @@ class Food(models.Model):
     date =models.DateField()
     time = models.TimeField(null=True,blank=True)
     notes = models.TextField(blank=True)
+    daily_goal = models.IntegerField(default=2000, help_text='Daily calories target')
 
     class Meta:
         ordering = ['-date','-time']

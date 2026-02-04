@@ -128,7 +128,7 @@ class FoodViewSet(viewsets.ModelViewSet):
         week_ago = today - timedelta(days=7)
 
         # Get food entries for the week
-        weekly_foods = self.get_queryset().filter(date__gte=week_ago, date__lte=today)
+        weekly_foods = self.get_queryset().filter(date__gte=week_ago,date__lte=today)
 
         # Weekly totals
         weekly_totals = weekly_foods.aggregate(
@@ -165,6 +165,7 @@ class FoodViewSet(viewsets.ModelViewSet):
 
             daily_breakdown.append({
                 'date': day,
+                'day_of_week': day.strftime('%A'),
                 'summary': day_summary
             })
 
