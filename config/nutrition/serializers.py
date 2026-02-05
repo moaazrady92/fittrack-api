@@ -8,7 +8,7 @@ class FoodSerializer(serializers.ModelSerializer):
     class Meta:
         model = Food
         fields = [
-            'id', 'user', 'user_id','name','mean_type'
+            'id', 'user', 'user_id','name','meal_type',
             'calories','proteins','carbs','fats',
             'date','time','notes','get_meal_type_display'
         ]
