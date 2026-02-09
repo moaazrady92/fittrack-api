@@ -32,3 +32,10 @@ media/
 # OS
 .DS_Store
 Thumbs.db
+
+# Add backups folder to gitignore
+echo "backups/" >> .gitignore
+echo "*.sql" >> .gitignore
+
+# Verify .gitignore content
+cat .gitignore
