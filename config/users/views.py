@@ -1,11 +1,18 @@
-from django.shortcuts import render
-from .serializers import UserSerializer,RegisterSerializer,LoginSerializer
-from rest_framework import serializers
+from django.contrib.auth import get_user_model
+from rest_framework import generics, permissions, status
 from rest_framework.response import Response
-from rest_framework.views import APIView
-from django.contrib.auth import login, logout
-from rest_framework.authtoken.models import Token
-from rest_framework import generics , permissions , status
+from rest_framework_simplejwt.views import TokenObtainPairView
+from rest_framework_simplejwt.tokens import RefreshToken
+from rest_framework_simplejwt.exceptions import TokenError
+
+from .serializers import (
+    UserSerializer,
+    CustomTokenObtainPairSerializer,
+    RegisterSerializer
+)
+
+
+User = get_user_model()
 
 class RegisterView(generics.CreateAPIView):
     serializer_class = RegisterSerializer
@@ -16,49 +23,48 @@ class RegisterView(generics.CreateAPIView):
         serializer.is_valid(raise_exception=True)
         user = serializer.save()
 
-        #create token for the user
-        token, created = Token.objects.get_or_create(user=user)
+        refresh = RefreshToken.for_user(user)
 
-        #login the user
-        login(request, user)
         return Response({'user':UserSerializer(user).data,
-                              'token':token.key,
-                              'message':'Registration Successful!'
-                         }, status=status.HTTP_201_CREATED)
+                             'refresh':str(refresh),
+                             'access':str(refresh.access_token),
+                             'message':'User Created Successfully!'
+                             }, status=status.HTTP_201_CREATED)
 
-class LoginView(APIView):
-    permission_classes = [permissions.AllowAny]
+class CustomTokenObtainPairView(TokenObtainPairView):
+    serializer_class = CustomTokenObtainPairSerializer
 
-    def post(self, request):
-        serializer = LoginSerializer(data=request.data)
-        serializer.is_valid(raise_exception=True)
-        user = serializer.validated_data['user']
 
-        #create or get token
-        token , created = Token.objects.get_or_create(user=user)
-
-        #login the user
-        login(request, user)
-        return Response({'user':UserSerializer(user).data,
-                         'token':token.key,
-                         'message':'Login Successful!'
-                         })
-
-class LogoutView(APIView):
-    def post(self,request):
-        # delete the token
-        try:
-            request.user.auth_token.delete()
-        except:
-            pass
-
-        # Logout the user
-        logout(request)
-        return Response({'message':'Logout Successful!'})
-
-class UserProfileView(generics.RetrieveAPIView):
+class UserProfileView(generics.RetrieveUpdateAPIView):
     serializer_class = UserSerializer
     permission_classes = [permissions.IsAuthenticated]
 
     def get_object(self):
         return self.request.user
+
+
+class LogoutView(generics.GenericAPIView):
+
+    permission_classes = [permissions.IsAuthenticated]
+
+    def post(self,request):
+        refresh_token = request.data.get('refresh')
+
+        if not refresh_token:
+            return Response({
+                "message":"Refresh Token is required!"
+            },status=status.HTTP_400_BAD_REQUEST
+            )
+        try:
+            token = RefreshToken(refresh_token)
+            token.blacklist()
+
+            return Response({
+                "message":"Successfully logged out!"
+            },status=status.HTTP_205_RESET_CONTENT
+            )
+        except Exception as e:
+            return Response({
+                'error':'invalid token'
+            },status =status.HTTP_400_BAD_REQUEST
+            )

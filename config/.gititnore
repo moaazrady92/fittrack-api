@@ -10,3 +10,6 @@ media/
 .DS_Store
 Thumbs.db
 EOF
+*.env
+.env.local
+*.sql

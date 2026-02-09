@@ -1,0 +1,60 @@
+version: '3.8'
+
+services:
+  # PostgreSQL Database Service
+  postgres:
+    image: postgres:15-alpine  # Alpine = smaller, faster
+    container_name: workout_postgres  # Give it a friendly name
+    restart: unless-stopped  # Auto-restart if it crashes
+
+    # Environment variables (from .env file)
+    environment:
+      POSTGRES_DB: ${POSTGRES_DB}
+      POSTGRES_USER: ${POSTGRES_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+
+    # Port mapping: Host Port -> Container Port
+    ports:
+      - "${POSTGRES_PORT}:5432"  # Maps localhost:5432 to container's 5432
+
+    # Persistent storage (database data survives container restarts)
+    volumes:
+      - postgres_data:/var/lib/postgresql/data  # Data volume
+      - ./docker/postgres/init.sql:/docker-entrypoint-initdb.d/init.sql  # Initialization script
+
+    # Health check (auto-monitor if database is healthy)
+    healthcheck:
+      test: [ "CMD-SHELL", "pg_isready -U ${POSTGRES_USER} -d ${POSTGRES_DB}" ]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+    # Network (containers can talk to each other)
+    networks:
+      - workout_network
+
+  # pgAdmin - Database Management GUI (Optional but SUPER helpful!)
+  pgadmin:
+    image: dpage/pgadmin4
+    container_name: workout_pgadmin
+    restart: unless-stopped
+    environment:
+      PGADMIN_DEFAULT_EMAIL: admin@workoutapp.com
+      PGADMIN_DEFAULT_PASSWORD: admin123
+    ports:
+      - "5050:80"  # Access at http://localhost:5050
+    depends_on:
+      postgres:
+        condition: service_healthy  # Wait for postgres to be ready
+    networks:
+      - workout_network
+
+# Define volumes (persistent storage)
+volumes:
+  postgres_data:  # Named volume for PostgreSQL data
+    driver: local
+
+# Define networks (communication between containers)
+networks:
+  workout_network:
+    driver: bridge

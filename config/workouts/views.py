@@ -9,9 +9,10 @@ from django.db import models
 from rest_framework import serializers
 from drf_yasg.utils import swagger_auto_schema
 from drf_yasg import openapi
-
+from rest_framework_simplejwt.authentication import JWTAuthentication
 
 class WorkoutViewSet(viewsets.ModelViewSet):
+    authentication_classes = [JWTAuthentication]
     serializer_class = WorkoutSerializer
     permission_classes = [permissions.IsAuthenticated]
     filter_backends = [DjangoFilterBackend, filters.SearchFilter, filters.OrderingFilter]

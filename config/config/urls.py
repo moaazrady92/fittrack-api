@@ -19,7 +19,11 @@ from django.urls import path, include, re_path
 from drf_yasg.views import get_schema_view
 from rest_framework import permissions
 from drf_yasg import openapi
-
+from rest_framework_simplejwt.views import (
+    TokenObtainPairView,
+    TokenRefreshView,
+    TokenVerifyView
+)
 schema_view = get_schema_view(
     openapi.Info(
         title="Fittrack API",
@@ -51,8 +55,10 @@ urlpatterns = [
     # DRF authentication URLs (for browsable API)
     path('api-auth/', include('rest_framework.urls')),
 
-    # Your API endpoints
     path('api/workouts/', include('workouts.urls')),
     path('api/', include('users.urls')),
     path('api/nutrition/', include('nutrition.urls')),
+    path('api/token/', TokenObtainPairView.as_view(), name='token_obtain_pair'),
+    path('api/token/refresh/', TokenRefreshView.as_view(), name='token_refresh'),
+    path('api/token/verify/',TokenVerifyView.as_view(), name='token_verify'),
 ]

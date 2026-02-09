@@ -9,12 +9,13 @@ from django.utils import timezone
 from datetime import timedelta
 from .models import Food
 from .serializers import FoodSerializer
-
+from rest_framework_simplejwt.authentication import JWTAuthentication
 
 class FoodViewSet(viewsets.ModelViewSet):
     """
     ViewSet for managing food entries
     """
+    authentication_classes = [JWTAuthentication]
     serializer_class = FoodSerializer
     permission_classes = [permissions.IsAuthenticated]
 
