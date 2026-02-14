@@ -10,9 +10,14 @@ For the full list of settings and their values, see
 https://docs.djangoproject.com/en/6.0/ref/settings/
 """
 import os
+import dj_database_url
 from pathlib import Path
 from datetime import timedelta
+
+from django.conf.global_settings import MIDDLEWARE, SECURE_SSL_HOST, SECURE_SSL_REDIRECT, SESSION_COOKIE_SECURE, \
+    CSRF_COOKIE_PATH, SECURE_CONTENT_TYPE_NOSNIFF, SECURE_HSTS_PRELOAD, SECURE_HSTS_INCLUDE_SUBDOMAINS
 from dotenv import load_dotenv
+
 
 load_dotenv()
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
@@ -28,21 +33,66 @@ SECRET_KEY = os.environ.get('DJANGO_SECRET_KEY','fallback-key-for-dev-only')
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = os.environ.get('DJANGO_DEBUG', 'False') == 'True'
 
-if DEBUG:
-    LOGGING = {
-        'version': 1,
-        'handlers': {
-            'console': {'class': 'logging.StreamHandler',},
+LOGGING = {
+    'version': 1,
+    'disable_existing_loggers': False,
+    'handlers': {
+        'consol': {
+            'class' : 'logging.handlers.StreamHandler',
+
         },
-        'loggers': {
-            'django.db.backends': {
-                'level': 'DEBUG',
-                'handlers': ['console'],
-            },
+    },
+    'loggers': {
+        'django.db.backends' : {
+            'level' : 'DEBUG' if DEBUG else 'INFO',
+            'handlers' : ['consol'],
+            'propagate' : False, # prevents duplicate logs
+        },
+        'workouts' : {
+            'level' : 'DEBUG' if DEBUG else 'WARNING',
+            'handlers' : ['consol'],
+
+        },
+        'users' : {
+            'level' : 'DEBUG' if DEBUG else 'WARNING',
+            'handlers' : ['consol'],
         },
     }
+}
+if not DEBUG:
+    LOGGING['loggers']['django.request'] = {
+        'level': 'ERROR',
+        'handlers': ['consol'],
+        'propagate': False,
+    }
 
-ALLOWED_HOSTS = os.environ.get('DJANGO_ALLOWED_HOSTS', '').split(',')
+if not DEBUG:
+    # forcing https
+    SECURE_SSL_REDIRECT = True
+
+    #secure cookies
+    SESSION_COOKIE_SECURE =True
+    CSRF_COOKIE_SECURE = True
+
+    # security headers
+    SECURE_BROWSER_XSS_FILTER = True
+    SECURE_CONTENT_TYPE_NOSNIFF = True
+
+    # HSTS - Remember to use HTTPS
+    SECURE_HSTS_SECONDS = 31536000  # 1 year
+    SECURE_HSTS_INCLUDE_SUBDOMAINS = True
+    SECURE_HSTS_PRELOAD = True
+
+
+ALLOWED_HOSTS = [
+    'localhost',
+    '127.0.0.1',
+    '.onrender.com',
+]
+
+
+if 'whitenoise.middleware.WhiteNoiseMiddleware' not in MIDDLEWARE:
+    MIDDLEWARE.insert(1, 'whitenoise.middleware.WhiteNoiseMiddleware')
 
 
 # Application definition
@@ -72,7 +122,8 @@ CHANNEL_LAYERS = {
     'default': {
         'BACKEND': 'channels_redis.core.RedisChannelLayer',
         'CONFIG': {
-            "hosts": [('127.0.0.1', 6379)],
+            "hosts": [(os.environ.get('REDIS_HOST','127.0.0.1'),
+                      int(os.environ.get('REDIS_PORT','6379'))),],
         },
     },
 }
@@ -145,20 +196,30 @@ WSGI_APPLICATION = 'config.wsgi.application'
 # Database
 # https://docs.djangoproject.com/en/6.0/ref/settings/#databases
 
-DATABASES = {
-    'default': {
-        'ENGINE': 'django.db.backends.postgresql',
-        'NAME':os.environ.get('POSTGRES_DB','workoutdb'),
-        'USER':os.environ.get('POSTGRES_USER','workoutuser'),
-        'PASSWORD':os.environ.get('POSTGRES_PASSWORD',''),
-        'HOST':os.environ.get('POSTGRES_HOST','localhost'),
-        'PORT':os.environ.get('POSTGRES_PORT','5432'),
-        'CONN_MAX_AGE': 600, # THIS KEEPS CONNECTION ALIVE
-        'OPTIONS': {
-            'connect_timeout':10,
+
+
+if 'DATABASE_URL' in os.environ:
+    DATABASES = {
+        'default': dj_database_url.config(
+            conn_max_age=6000, # this keeps connection alive
+            conn_health_checks=True,  #auto checks connection health
+        )
+    }
+else:
+    DATABASES = {
+        'default': {
+            'ENGINE': 'django.db.backends.postgresql',
+            'NAME':os.environ.get('POSTGRES_DB','workoutdb'),
+            'USER':os.environ.get('POSTGRES_USER','workoutuser'),
+            'PASSWORD':os.environ.get('POSTGRES_PASSWORD',''),
+            'HOST':os.environ.get('POSTGRES_HOST','localhost'),
+            'PORT':os.environ.get('POSTGRES_PORT','5432'),
+            'CONN_MAX_AGE': 600, # THIS KEEPS CONNECTION ALIVE
+            'OPTIONS': {
+                'connect_timeout':10,
+            }
         }
     }
-}
 
 
 # Password validation
@@ -195,4 +256,6 @@ USE_TZ = True
 # Static files (CSS, JavaScript, Images)
 # https://docs.djangoproject.com/en/6.0/howto/static-files/
 
-STATIC_URL = 'static/'
+STATIC_URL = '/static/'
+STATIC_ROOT = os.path.join(BASE_DIR, 'staticfiles')
+STATICFILES_STORAGE = 'whitenoise.storage.WhiteNoiseStaticFilesStorage'
