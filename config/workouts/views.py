@@ -4,12 +4,14 @@ from rest_framework.response import Response
 from rest_framework.decorators import action
 from django_filters.rest_framework import DjangoFilterBackend
 from .models import Workout, Exercise
+from .repositories.workout_repository import WorkoutRepository
 from .serializers import ExerciseSerializer, WorkoutSerializer
 from django.db import models
 from rest_framework import serializers
 from drf_yasg.utils import swagger_auto_schema
 from drf_yasg import openapi
 from rest_framework_simplejwt.authentication import JWTAuthentication
+from services.workout_services import WorkoutService
 
 class WorkoutViewSet(viewsets.ModelViewSet):
     authentication_classes = [JWTAuthentication]
@@ -21,10 +23,20 @@ class WorkoutViewSet(viewsets.ModelViewSet):
     ordering_fields = ['-date', 'duration']
 
     def get_queryset(self):
-        return Workout.objects.filter(user=self.request.user)
+        return WorkoutRepository.get_user_workout(self.request.user)
 
     def perform_create(self, serializer):
-        serializer.save(user=self.request.user)
+        try:
+            workout = WorkoutService.create_workout(
+                user = self.request.user,
+                data = serializer.validated_data,
+                repo = WorkoutRepository
+            )
+            serializer.instance = workout
+
+        except ValueError as e:
+            raise serializers.ValidationError({'detail': str(e)})
+
 
     @swagger_auto_schema(
         operation_description="Retrieve a list of workouts with optional filtering",
@@ -53,7 +65,7 @@ class WorkoutViewSet(viewsets.ModelViewSet):
             200: WorkoutSerializer(many=True),
             401: 'Unauthorized',
         }
-    )
+            )
     def list(self, request, *args, **kwargs):
         return super().list(request, *args, **kwargs)
 
@@ -74,9 +86,10 @@ class WorkoutViewSet(viewsets.ModelViewSet):
     )
     @action(detail=False, methods=['get'])
     def today(self, request):
-        from django.utils import timezone
-        today = timezone.now().date()
-        workout = self.get_queryset().filter(date=today).first()
+        workout = WorkoutService.get_today_workout(
+            user=request.user,
+            repo = WorkoutRepository
+        )
 
         if workout:
             serializer = self.get_serializer(workout)
@@ -128,25 +141,10 @@ class WorkoutViewSet(viewsets.ModelViewSet):
     )
     @action(detail=False, methods=['get'])
     def stats(self, request):
-        from django.db.models import Count, Sum, Avg
-        from django.utils import timezone
-        from datetime import timedelta
-
-        last_30_days = timezone.now().date() - timedelta(days=30)
-
-        stats = self.get_queryset().filter(date__gte=last_30_days).aggregate(
-            total_workout=Count('id'),
-            total_duration=Sum('duration'),
-            avg_duration=Avg('duration'),
-            strength_count=Count('id', filter=models.Q(workout_type='STR')),
-            cardio_count=Count('id', filter=models.Q(workout_type='CAR')),
+        stats = WorkoutService.get_stats(
+            user=request.user,
+            repo = WorkoutRepository
         )
-
-        # Handle None values
-        for key, value in stats.items():
-            if value is None:
-                stats[key] = 0
-
         return Response(stats)
 
 

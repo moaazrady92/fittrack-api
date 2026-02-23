@@ -28,6 +28,7 @@ class Goal(models.Model):
     unit = models.CharField(max_length=50, blank=True)
     start_date = models.DateField()
     end_date = models.DateField()
+    date = models.DateField()
     status = models.CharField(max_length=50, choices=STATUS_CHOICES, default='NOT_STARTED')
     is_public = models.BooleanField(default=False)
 

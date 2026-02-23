@@ -1,60 +1,94 @@
-version: '3.8'
 
 services:
-  # PostgreSQL Database Service
+  # PostgreSQL Database Service (KEEP THIS - it's good!)
   postgres:
-    image: postgres:15-alpine  # Alpine = smaller, faster
-    container_name: workout_postgres  # Give it a friendly name
-    restart: unless-stopped  # Auto-restart if it crashes
-
-    # Environment variables (from .env file)
+    image: postgres:15-alpine
+    container_name: workout_postgres
+    restart: unless-stopped
     environment:
-      POSTGRES_DB: ${POSTGRES_DB}
-      POSTGRES_USER: ${POSTGRES_USER}
-      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
-
-    # Port mapping: Host Port -> Container Port
+      POSTGRES_DB: ${POSTGRES_DB:-workoutdb}
+      POSTGRES_USER: ${POSTGRES_USER:-workoutuser}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-securepassword123}
     ports:
-      - "${POSTGRES_PORT}:5432"  # Maps localhost:5432 to container's 5432
-
-    # Persistent storage (database data survives container restarts)
+      - "${POSTGRES_PORT:-5432}:5432"
     volumes:
-      - postgres_data:/var/lib/postgresql/data  # Data volume
-      - ./docker/postgres/init.sql:/docker-entrypoint-initdb.d/init.sql  # Initialization script
-
-    # Health check (auto-monitor if database is healthy)
+      - postgres_data:/var/lib/postgresql/data
+      - ./docker/postgres/init.sql:/docker-entrypoint -initdb.d/init.sql
     healthcheck:
-      test: [ "CMD-SHELL", "pg_isready -U ${POSTGRES_USER} -d ${POSTGRES_DB}" ]
+      test: [ "CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-workoutuser} -d ${POSTGRES_DB:-workoutdb}" ]
       interval: 10s
       timeout: 5s
       retries: 5
-
-    # Network (containers can talk to each other)
     networks:
       - workout_network
 
-  # pgAdmin - Database Management GUI (Optional but SUPER helpful!)
+  # Redis for Django Channels (NEW!)
+  redis:
+    image: redis:7-alpine
+    container_name: workout_redis
+    restart: unless-stopped
+    ports:
+      - "6379:6379"  # Redis uses port 6379 (NOT 5432!)
+    networks:
+      - workout_network
+
+  # Django Application (NEW! - This is your API)
+  web:
+    build: .  # Uses your Dockerfile
+    container_name: workout_django
+    restart: unless-stopped
+    command: python manage.py runserver 0.0.0.0:8000
+    volumes:
+      - .:/app  # Live code reloading
+    ports:
+      - "8000:8000"  # Your API at http://localhost:8000
+    environment:
+      # Database connection
+      POSTGRES_HOST: postgres  # "postgres" = service name in docker-compose
+      POSTGRES_PORT: 5432
+      POSTGRES_DB: ${POSTGRES_DB:-workoutdb}
+      POSTGRES_USER: ${POSTGRES_USER:-workoutuser}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-securepassword123}
+
+      # Redis for WebSockets
+      REDIS_HOST: redis  # "redis" = service name
+      REDIS_PORT: 6379
+
+      # Django settings
+      DJANGO_SETTINGS_MODULE: config.settings
+      DJANGO_SECRET_KEY: ${DJANGO_SECRET_KEY:-django-insecure-dev-key-change-me}
+      DJANGO_DEBUG: ${DJANGO_DEBUG:-True}
+      DJANGO_ALLOWED_HOSTS: localhost,127.0.0.1,web,postgres
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_started
+    networks:
+      - workout_network
+
+  # pgAdmin - Database Management GUI (KEEP THIS - optional but helpful)
   pgadmin:
     image: dpage/pgadmin4
     container_name: workout_pgadmin
     restart: unless-stopped
     environment:
-      PGADMIN_DEFAULT_EMAIL: admin@workoutapp.com
-      PGADMIN_DEFAULT_PASSWORD: admin123
+      PGADMIN_DEFAULT_EMAIL: ${PGADMIN_EMAIL:-admin@workoutapp.com}
+      PGADMIN_DEFAULT_PASSWORD: ${PGADMIN_PASSWORD:-admin123}
     ports:
-      - "5050:80"  # Access at http://localhost:5050
+      - "5050:80"
     depends_on:
       postgres:
-        condition: service_healthy  # Wait for postgres to be ready
+        condition: service_healthy
     networks:
       - workout_network
 
-# Define volumes (persistent storage)
+# Define volumes
 volumes:
-  postgres_data:  # Named volume for PostgreSQL data
+  postgres_data:
     driver: local
 
-# Define networks (communication between containers)
+# Define networks
 networks:
   workout_network:
     driver: bridge

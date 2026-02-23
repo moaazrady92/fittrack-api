@@ -1,3 +1,44 @@
 ".env" 
 ".env.local" 
 ".env.*" 
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+
+# Virtual environments
+venv/
+env/
+
+# Environment and secrets
+.env
+.env.local
+*.env
+.env.prod
+
+# Database
+db.sqlite3
+*.sqlite3
+backups/
+
+# Django media
+media/
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Add backups folder to gitignore
+echo "backups/" >> .gitignore
+echo "*.sql" >> .gitignore
+
+# Verify .gitignore content
+cat .gitignore
