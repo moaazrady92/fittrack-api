@@ -42,3 +42,6 @@ echo "*.sql" >> .gitignore
 
 # Verify .gitignore content
 cat .gitignore
+
+*.sql
+*.txt
