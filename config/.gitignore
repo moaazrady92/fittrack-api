@@ -1,47 +1,61 @@
-".env" 
-".env.local" 
-".env.*" 
+# ==========================
 # Python
+# ==========================
 __pycache__/
 *.py[cod]
 *$py.class
 *.so
 .Python
 
-# Virtual environments
+# ==========================
+# Virtual Environments
+# ==========================
 venv/
 env/
+.venv/
 
-# Environment and secrets
+# ==========================
+# Environment Variables & Secrets
+# ==========================
 .env
-.env.local
-*.env
-.env.prod
+.env.*
+!.env.example
 
-# Database
+# ==========================
+# Database & Backups
+# ==========================
 db.sqlite3
 *.sqlite3
 backups/
+*.sql
 
-# Django media
+# ==========================
+# Django Media
+# ==========================
 media/
 
-# IDE
+# ==========================
+# IDE & Editor
+# ==========================
 .vscode/
 .idea/
 *.swp
 *.swo
 
-# OS
+# ==========================
+# OS Files
+# ==========================
 .DS_Store
 Thumbs.db
 
-# Add backups folder to gitignore
-echo "backups/" >> .gitignore
-echo "*.sql" >> .gitignore
+# ==========================
+# Logs
+# ==========================
+*.log
 
-# Verify .gitignore content
-cat .gitignore
-
-*.sql
-*.txt
+# ==========================
+# Node / Frontend (future proof)
+# ==========================
+node_modules/
+dist/
+build/
