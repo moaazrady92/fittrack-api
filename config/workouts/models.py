@@ -1,6 +1,8 @@
 from django.core.validators import MinValueValidator
 from django.db import models
 from django.conf import settings
+from django.db.models import UniqueConstraint
+
 
 class Workout(models.Model):
     WORKOUT_TYPES = [
@@ -19,7 +21,9 @@ class Workout(models.Model):
 
     class Meta:
         ordering = ['-created_at']
-        unique_together = ['user', 'date']
+        constraints = [
+            UniqueConstraint(fields=['user', 'date'], name='unique_workout_date')
+        ] #this means only a single workout per day
 
     def __str__(self):
         return f"{self.date} - {self.get_workout_type_display()}"

@@ -1,6 +1,5 @@
-from workouts.domain.workout_rules import WorkoutDomainService
 from workouts.models import Workout
-from django.utils import timezone
+
 
 class WorkoutService:
 
@@ -21,7 +20,6 @@ class WorkoutService:
 
     @staticmethod
     def create_workout(user,repo,data):
-        today = timezone.now().date()
         if repo.today_workout(user):
             raise ValueError('You already logged workout for today')
 

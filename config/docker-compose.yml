@@ -1,19 +1,19 @@
 
 services:
-  # PostgreSQL Database Service (KEEP THIS - it's good!)
+  # PostgreSQL
   postgres:
     image: postgres:15-alpine
     container_name: workout_postgres
     restart: unless-stopped
     environment:
-      POSTGRES_DB: ${POSTGRES_DB:-workoutdb}
+      POSTGRES_DB: ${POSTGRES_DB:-workoutdb}  # this means use my .env database otherwise use workoutdb (will auto create it)
       POSTGRES_USER: ${POSTGRES_USER:-workoutuser}
       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-securepassword123}
     ports:
       - "${POSTGRES_PORT:-5432}:5432"
     volumes:
-      - postgres_data:/var/lib/postgresql/data
-      - ./docker/postgres/init.sql:/docker-entrypoint -initdb.d/init.sql
+      - postgres_data:/var/lib/postgresql/data #saving database outside the container so if it gets deleted the database stays
+      - ./docker/postgres/init.sql:/docker-entrypoint-initdb.d/init.sql #when database gets created it runs to the init.sql file
     healthcheck:
       test: [ "CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-workoutuser} -d ${POSTGRES_DB:-workoutdb}" ]
       interval: 10s
@@ -22,44 +22,40 @@ services:
     networks:
       - workout_network
 
-  # Redis for Django Channels (NEW!)
+  # Redis
   redis:
     image: redis:7-alpine
     container_name: workout_redis
     restart: unless-stopped
     ports:
-      - "6379:6379"  # Redis uses port 6379 (NOT 5432!)
+      - "6379:6379"  # Redis uses port 6379
     networks:
-      - workout_network
+      - workout_network # this makes sure that all services connect to the same docker network
 
-  # Django Application (NEW! - This is your API)
+  # Django
   web:
-    build: .  # Uses your Dockerfile
+    build: .  # Uses docker file
     container_name: workout_django
     restart: unless-stopped
     command: python manage.py runserver 0.0.0.0:8000
     volumes:
-      - .:/app  # Live code reloading
+      - .:/app  # if you edit code locally container updates immediately
     ports:
-      - "8000:8000"  # Your API at http://localhost:8000
+      - "8000:8000"
     environment:
       # Database connection
-      POSTGRES_HOST: postgres  # "postgres" = service name in docker-compose
+      POSTGRES_HOST: postgres
       POSTGRES_PORT: 5432
       POSTGRES_DB: ${POSTGRES_DB:-workoutdb}
       POSTGRES_USER: ${POSTGRES_USER:-workoutuser}
       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-securepassword123}
 
-      # Redis for WebSockets
-      REDIS_HOST: redis  # "redis" = service name
-      REDIS_PORT: 6379
-
       # Django settings
-      DJANGO_SETTINGS_MODULE: config.settings
+      DJANGO_SETTINGS_MODULE: config.settings #settings directory
       DJANGO_SECRET_KEY: ${DJANGO_SECRET_KEY:-django-insecure-dev-key-change-me}
       DJANGO_DEBUG: ${DJANGO_DEBUG:-True}
-      DJANGO_ALLOWED_HOSTS: localhost,127.0.0.1,web,postgres
-    depends_on:
+      DJANGO_ALLOWED_HOSTS: localhost,127.0.0.1,postgres
+    depends_on: # means don't start server unless postgres and redis are ready
       postgres:
         condition: service_healthy
       redis:
@@ -67,7 +63,7 @@ services:
     networks:
       - workout_network
 
-  # pgAdmin - Database Management GUI (KEEP THIS - optional but helpful)
+  # pgAdmin - Database Management
   pgadmin:
     image: dpage/pgadmin4
     container_name: workout_pgadmin

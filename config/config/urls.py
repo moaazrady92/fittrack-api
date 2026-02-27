@@ -16,18 +16,20 @@ Including another URLconf
 """
 from django.contrib import admin
 from django.urls import path, include, re_path
-from drf_yasg.views import get_schema_view
-from rest_framework import permissions
-from drf_yasg import openapi
 from rest_framework_simplejwt.views import (
     TokenObtainPairView,
     TokenRefreshView,
     TokenVerifyView
 )
+# swagger settings
+from drf_yasg.views import get_schema_view
+from rest_framework import permissions
+from drf_yasg import openapi
+
 schema_view = get_schema_view(
     openapi.Info(
         title="Fittrack API",
-        default_version='v1',
+        default_version='v1.1',
         description="Fitness tracking Rest API",
         terms_of_service="https://www.google.com/policies/terms/",  # FIXED: Changed from 'terms_of_services' to 'terms_of_service'
         contact=openapi.Contact(email="contact@fittrack.local"),
@@ -49,12 +51,11 @@ urlpatterns = [
          schema_view.with_ui('redoc', cache_timeout=0),
          name='schema-redoc'),
 
-    # Django admin
+    # admin page
     path('admin/', admin.site.urls),
 
     # DRF authentication URLs (for browsable API)
     path('api-auth/', include('rest_framework.urls')),
-
     path('api/workouts/', include('workouts.urls')),
     path('api/', include('users.urls')),
     path('api/nutrition/', include('nutrition.urls')),
@@ -63,3 +64,5 @@ urlpatterns = [
     path('api/token/refresh/', TokenRefreshView.as_view(), name='token_refresh'),
     path('api/token/verify/',TokenVerifyView.as_view(), name='token_verify'),
 ]
+
+

@@ -20,6 +20,5 @@ class WorkoutSerializer(serializers.ModelSerializer):
                   'exercises','created_at']
         read_only_fields = ['id','user','user_id','created_at']
 
-    def create(self, validated_data):
-        validated_data['user'] = self.context['request'].user
-        return super().create(validated_data)
+    def perform_create(self, serializer):
+        serializer.save(user=self.request.user)

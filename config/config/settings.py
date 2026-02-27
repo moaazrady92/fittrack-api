@@ -10,13 +10,12 @@ For the full list of settings and their values, see
 https://docs.djangoproject.com/en/6.0/ref/settings/
 """
 import os
-import dj_database_url
 from pathlib import Path
 from datetime import timedelta
 
 from django.conf.global_settings import MIDDLEWARE, SECURE_SSL_HOST, SECURE_SSL_REDIRECT, SESSION_COOKIE_SECURE, \
     CSRF_COOKIE_PATH, SECURE_CONTENT_TYPE_NOSNIFF, SECURE_HSTS_PRELOAD, SECURE_HSTS_INCLUDE_SUBDOMAINS
-from dotenv import load_dotenv
+from dotenv import load_dotenv # loads variables from .env
 
 
 load_dotenv()
@@ -38,18 +37,18 @@ LOGGING = {
     'disable_existing_loggers': False,
     'handlers': {
         'consol': {
-            'class' : 'logging.handlers.StreamHandler',
+            'class' : 'logging.StreamHandler', #prints the logs directly into terminals
 
         },
     },
     'loggers': {
         'django.db.backends' : {
-            'level' : 'DEBUG' if DEBUG else 'INFO',
+            'level' : 'DEBUG' if DEBUG else 'INFO', # this means if debug = true show everything else show important stuff only
             'handlers' : ['consol'],
             'propagate' : False, # prevents duplicate logs
         },
         'workouts' : {
-            'level' : 'DEBUG' if DEBUG else 'WARNING',
+            'level' : 'DEBUG' if DEBUG else 'WARNING', # this means if debug = true show everything else show problems only
             'handlers' : ['consol'],
 
         },
@@ -59,7 +58,7 @@ LOGGING = {
         },
     }
 }
-if not DEBUG:
+if not DEBUG: # everything here runs only in production
     LOGGING['loggers']['django.request'] = {
         'level': 'ERROR',
         'handlers': ['consol'],
@@ -90,11 +89,6 @@ ALLOWED_HOSTS = [
     '.onrender.com',
 ]
 
-
-if 'whitenoise.middleware.WhiteNoiseMiddleware' not in MIDDLEWARE:
-    MIDDLEWARE.insert(1, 'whitenoise.middleware.WhiteNoiseMiddleware')
-
-
 # Application definition
 
 INSTALLED_APPS = [
@@ -103,7 +97,6 @@ INSTALLED_APPS = [
     'users',
     'workouts',
 
-    'channels',
     'drf_yasg',
     'rest_framework',
     'rest_framework_simplejwt',
@@ -116,17 +109,6 @@ INSTALLED_APPS = [
     'django.contrib.messages',
     'django.contrib.staticfiles',
 ]
-
-
-CHANNEL_LAYERS = {
-    'default': {
-        'BACKEND': 'channels_redis.core.RedisChannelLayer',
-        'CONFIG': {
-            "hosts": [(os.environ.get('REDIS_HOST','127.0.0.1'),
-                      int(os.environ.get('REDIS_PORT','6379'))),],
-        },
-    },
-}
 
 REST_FRAMEWORK = {
     'DEFAULT_AUTHENTICATION_CLASSES': [
@@ -198,29 +180,16 @@ WSGI_APPLICATION = 'config.wsgi.application'
 
 
 
-if 'DATABASE_URL' in os.environ:
-    DATABASES = {
-        'default': dj_database_url.config(
-            conn_max_age=6000, # this keeps connection alive
-            conn_health_checks=True,  #auto checks connection health
-        )
+DATABASES = {
+    'default': {
+        'ENGINE': 'django.db.backends.postgresql',
+        'NAME': os.environ.get('POSTGRES_DB', 'workoutdb'),
+        'USER': os.environ.get('POSTGRES_USER', 'workoutuser'),
+        'PASSWORD': os.environ.get('POSTGRES_PASSWORD', ''),
+        'HOST': os.environ.get('POSTGRES_HOST', 'localhost'),
+        'PORT': os.environ.get('POSTGRES_PORT', '5432'),
     }
-else:
-    DATABASES = {
-        'default': {
-            'ENGINE': 'django.db.backends.postgresql',
-            'NAME':os.environ.get('POSTGRES_DB','workoutdb'),
-            'USER':os.environ.get('POSTGRES_USER','workoutuser'),
-            'PASSWORD':os.environ.get('POSTGRES_PASSWORD',''),
-            'HOST':os.environ.get('POSTGRES_HOST','localhost'),
-            'PORT':os.environ.get('POSTGRES_PORT','5432'),
-            'CONN_MAX_AGE': 600, # THIS KEEPS CONNECTION ALIVE
-            'OPTIONS': {
-                'connect_timeout':10,
-            }
-        }
-    }
-
+}
 
 # Password validation
 # https://docs.djangoproject.com/en/6.0/ref/settings/#auth-password-validators

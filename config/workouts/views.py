@@ -11,7 +11,7 @@ from rest_framework import serializers
 from drf_yasg.utils import swagger_auto_schema
 from drf_yasg import openapi
 from rest_framework_simplejwt.authentication import JWTAuthentication
-from services.workout_services import WorkoutService
+from .services.workout_services import WorkoutService
 
 class WorkoutViewSet(viewsets.ModelViewSet):
     authentication_classes = [JWTAuthentication]
