@@ -12,17 +12,21 @@ class UserSerializer(serializers.ModelSerializer):
         fields = ('id', 'username', 'email', 'first_name', 'last_name',
                   'height', 'weight', 'birth_date', 'fitness_level',
                   'is_public', 'date_joined', 'last_login')
-
         read_only_fields = ['id','date_joined','last_login','is_staff','is_active','is_superuser']
 
-    def validate_email(self,value):
-        if User.objects.filter(email=value).exclude(id=self.instance.id if self.instance else None).exists():
+    def validate_email(self,value): # since we will login via email
+        if User.objects.filter(email=value).exclude(id=self.instance.id if self.instance else None).exists(): #exclude = except
+            # creating account --> self.instance = None , updating account --> self.instance = your email
+            # so it would prevent errors when trying to login again with your email
+            # .exists() runs a fast database check (returns True or False)
             raise serializers.ValidationError("A user with this email already exists.")
+
+
 
         return value
 
 class CustomTokenObtainPairSerializer(TokenObtainPairSerializer):
-    @classmethod
+    @classmethod # for calling the class itself without needing to call it like class()
     def get_token(cls, user):
         token = super().get_token(user)
         token['username'] = user.username
@@ -51,7 +55,8 @@ class RegisterSerializer(serializers.ModelSerializer):
 
     def validate(self,attrs):
         if attrs['password'] != attrs['password2']:
-            raise serializers.ValidationError({'Password':'Passwords dont match.'
+            raise serializers.ValidationError({
+                'Password':'Passwords dont match.'
                                                })
         if User.objects.filter(email=attrs['email']).exists():
             raise serializers.ValidationError("A user with this email already exists.")
@@ -60,7 +65,9 @@ class RegisterSerializer(serializers.ModelSerializer):
 
     def create(self,validated_data):
         validated_data.pop('password2')
-        user = User.objects.create_user(**validated_data)
+        user = User.objects.create_user(**validated_data) #hashing password and applies django auth login
         return user
+
+
 
 

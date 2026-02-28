@@ -10,7 +10,7 @@ class Workout(models.Model):
         ('CAR','cardio'),
         ('HIIT','HIIT'),
         ('FLEX','flexibility'),
-    ]
+    ]  # (how it's shown in the backend , how its displayed)
     user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name='workouts')
     date = models.DateField()
     duration = models.PositiveIntegerField(help_text='duration in minutes', validators=[MinValueValidator(1)])

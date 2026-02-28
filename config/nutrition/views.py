@@ -1,6 +1,7 @@
-# nutrition/views.py
 from django.shortcuts import render
-from rest_framework import viewsets, permissions, filters
+from rest_framework import viewsets
+from rest_framework.filters import SearchFilter, OrderingFilter
+from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 from rest_framework.decorators import action
 from django_filters.rest_framework import DjangoFilterBackend
@@ -12,40 +13,23 @@ from .serializers import FoodSerializer
 from rest_framework_simplejwt.authentication import JWTAuthentication
 
 class FoodViewSet(viewsets.ModelViewSet):
-    """
-    ViewSet for managing food entries
-    """
     authentication_classes = [JWTAuthentication]
     serializer_class = FoodSerializer
-    permission_classes = [permissions.IsAuthenticated]
+    permission_classes = [IsAuthenticated]
 
-    # Filtering setup
-    filter_backends = [DjangoFilterBackend, filters.SearchFilter, filters.OrderingFilter]
-    filterset_fields = ['meal_type', 'date']  # Filter by meal type or date
+    filter_backends = [DjangoFilterBackend,SearchFilter,OrderingFilter]
+    filterset_fields = ['meal_type', 'date']
     search_fields = ['name', 'notes']  # Search in food name or notes
-    ordering_fields = ['date', 'time', 'calories']  # Sort options
-
-    # date: oldest first, -date: newest first
-    # calories: lowest first, -calories: highest first
+    ordering_fields = ['date', 'time', 'calories']
 
     def get_queryset(self):
-        """
-        Users can only see their own food entries
-        """
         return Food.objects.filter(user=self.request.user)
 
     def perform_create(self, serializer):
-        """
-        Automatically set the current user when creating food entries
-        """
         serializer.save(user=self.request.user)
 
     @action(detail=False, methods=['get'])
     def today(self, request):
-        """
-        Get today's food entries
-        Endpoint: GET /api/nutrition/food/today/
-        """
         today = timezone.now().date()
         today_foods = self.get_queryset().filter(date=today)
 
@@ -56,11 +40,6 @@ class FoodViewSet(viewsets.ModelViewSet):
 
     @action(detail=False, methods=['get'])
     def daily_summary(self, request):
-        """
-        Get daily nutrition summary
-        Endpoint: GET /api/nutrition/food/daily-summary/?date=2024-01-30
-        """
-        # Get date from query params, default to today
         date_str = request.query_params.get('date')
         if date_str:
             from datetime import datetime
@@ -110,6 +89,7 @@ class FoodViewSet(viewsets.ModelViewSet):
                     count=Count('id')
                 )
                 meal_breakdown[meal_name] = meal_summary
+                #now it became a list like {breakfast : calories... , proteins..... )
 
         return Response({
             'date': target_date,
@@ -120,18 +100,10 @@ class FoodViewSet(viewsets.ModelViewSet):
 
     @action(detail=False, methods=['get'])
     def weekly_stats(self, request):
-        """
-        Get weekly nutrition statistics
-        Endpoint: GET /api/nutrition/food/weekly-stats/
-        """
-        # Calculate date range for last 7 days
         today = timezone.now().date()
         week_ago = today - timedelta(days=7)
 
-        # Get food entries for the week
         weekly_foods = self.get_queryset().filter(date__gte=week_ago,date__lte=today)
-
-        # Weekly totals
         weekly_totals = weekly_foods.aggregate(
             total_calories=Sum('calories'),
             avg_daily_calories=Avg('calories'),
@@ -142,7 +114,6 @@ class FoodViewSet(viewsets.ModelViewSet):
             avg_meals_per_day=Count('id') / 7.0  # Average per day
         )
 
-        # Daily breakdown
         daily_breakdown = []
         for i in range(7):
             day = today - timedelta(days=i)
@@ -190,20 +161,6 @@ class FoodViewSet(viewsets.ModelViewSet):
 
     @action(detail=False, methods=['get'])
     def calorie_goal(self, request):
-        """
-        Check progress against calorie goal
-        Endpoint: GET /api/nutrition/food/calorie-goal/?date=2024-01-30
-        """
-        # Get user's calorie goal (you'll need to add this to User model)
-        # For now, using a default or from user profile
-        try:
-            # If you add calorie_goal to User model:
-            # daily_goal = self.request.user.calorie_goal or 2000
-            daily_goal = 2000  # Default calorie goal
-        except:
-            daily_goal = 2000
-
-        # Get date from query params
         date_str = request.query_params.get('date')
         if date_str:
             from datetime import datetime
@@ -214,11 +171,10 @@ class FoodViewSet(viewsets.ModelViewSet):
         else:
             target_date = timezone.now().date()
 
-        # Get today's calories
-        today_foods = self.get_queryset().filter(date=target_date)
-        total_calories = today_foods.aggregate(total=Sum('calories'))['total'] or 0
+        queryset =  self.get_queryset().filter(date=target_date)
+        total_calories = queryset.aggregate(total=Sum('calories'))['total'] or 0
+        daily_goal = request.user.daily_calorie_goal
 
-        # Calculate progress
         progress_percentage = min((total_calories / daily_goal) * 100, 100) if daily_goal > 0 else 0
         remaining_calories = max(daily_goal - total_calories, 0)
 
@@ -233,10 +189,6 @@ class FoodViewSet(viewsets.ModelViewSet):
 
     @action(detail=False, methods=['get'])
     def search_food(self, request):
-        """
-        Search for food items by name
-        Endpoint: GET /api/nutrition/food/search/?q=chicken
-        """
         search_query = request.query_params.get('q', '')
         if not search_query:
             return Response({'error': 'Please provide a search query (?q=...)'},

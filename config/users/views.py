@@ -1,51 +1,52 @@
 from django.contrib.auth import get_user_model
-from rest_framework import generics, permissions, status
+from rest_framework import status
 from rest_framework.response import Response
+from rest_framework.permissions import IsAuthenticated , AllowAny
 from rest_framework_simplejwt.views import TokenObtainPairView
-from rest_framework_simplejwt.tokens import RefreshToken
-from rest_framework_simplejwt.exceptions import TokenError
-
+from rest_framework_simplejwt.tokens import RefreshToken #for generating and blacklist tokens and refresh token lives long unlike access token
+from rest_framework.generics import (
+    GenericAPIView,
+    RetrieveUpdateAPIView ,
+    CreateAPIView
+)
 from .serializers import (
     UserSerializer,
     CustomTokenObtainPairSerializer,
     RegisterSerializer
 )
 
-
 User = get_user_model()
 
-class RegisterView(generics.CreateAPIView):
+class RegisterView(CreateAPIView):
     serializer_class = RegisterSerializer
-    permission_classes = [permissions.AllowAny]
+    permission_classes = [AllowAny]
 
     def create(self, request, *args, **kwargs):
-        serializer = self.get_serializer(data=request.data)
+        serializer = self.get_serializer(data=request.data) #requisting data from serializers first
         serializer.is_valid(raise_exception=True)
-        user = serializer.save()
+        user = serializer.save() #saves user in db
 
         refresh = RefreshToken.for_user(user)
-
         return Response({'user':UserSerializer(user).data,
                              'refresh':str(refresh),
                              'access':str(refresh.access_token),
                              'message':'User Created Successfully!'
                              }, status=status.HTTP_201_CREATED)
 
-class CustomTokenObtainPairView(TokenObtainPairView):
+class CustomTokenObtainPairView(TokenObtainPairView):   #default jwt login view
     serializer_class = CustomTokenObtainPairSerializer
 
 
-class UserProfileView(generics.RetrieveUpdateAPIView):
+class UserProfileView(RetrieveUpdateAPIView):
     serializer_class = UserSerializer
-    permission_classes = [permissions.IsAuthenticated]
+    permission_classes = [IsAuthenticated]
 
     def get_object(self):
         return self.request.user
+    #/api/users/me
 
-
-class LogoutView(generics.GenericAPIView):
-
-    permission_classes = [permissions.IsAuthenticated]
+class LogoutView(GenericAPIView):
+    permission_classes = [IsAuthenticated]
 
     def post(self,request):
         refresh_token = request.data.get('refresh')

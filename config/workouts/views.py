@@ -1,12 +1,12 @@
-from django.shortcuts import render
-from rest_framework import viewsets, permissions, filters
+from rest_framework import viewsets
+from rest_framework.permissions import IsAuthenticated
+from rest_framework.filters import SearchFilter , OrderingFilter
 from rest_framework.response import Response
 from rest_framework.decorators import action
 from django_filters.rest_framework import DjangoFilterBackend
-from .models import Workout, Exercise
+from .models import Exercise
 from .repositories.workout_repository import WorkoutRepository
 from .serializers import ExerciseSerializer, WorkoutSerializer
-from django.db import models
 from rest_framework import serializers
 from drf_yasg.utils import swagger_auto_schema
 from drf_yasg import openapi
@@ -16,8 +16,8 @@ from .services.workout_services import WorkoutService
 class WorkoutViewSet(viewsets.ModelViewSet):
     authentication_classes = [JWTAuthentication]
     serializer_class = WorkoutSerializer
-    permission_classes = [permissions.IsAuthenticated]
-    filter_backends = [DjangoFilterBackend, filters.SearchFilter, filters.OrderingFilter]
+    permission_classes = [IsAuthenticated]
+    filter_backends = [DjangoFilterBackend,SearchFilter,OrderingFilter]
     filterset_fields = ['workout_type', 'date']
     search_fields = ['notes']
     ordering_fields = ['-date', 'duration']
@@ -150,7 +150,7 @@ class WorkoutViewSet(viewsets.ModelViewSet):
 
 class ExerciseViewSet(viewsets.ModelViewSet):
     serializer_class = ExerciseSerializer
-    permission_classes = [permissions.IsAuthenticated]
+    permission_classes = [IsAuthenticated]
 
     def get_queryset(self):
         return Exercise.objects.filter(workout__user=self.request.user)
