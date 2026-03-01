@@ -32,6 +32,19 @@ services:
     networks:
       - workout_network # this makes sure that all services connect to the same docker network
 
+  # celery
+  celery:
+    build: .
+    container_name: workout_celery
+    restart: unless-stopped
+    command: celery -A config worker --loglevel=info
+    volumes:
+      - .:/app
+    depends_on:
+      - redis
+    networks:
+      - workout_network
+
   # Django
   web:
     build: .  # Uses docker file

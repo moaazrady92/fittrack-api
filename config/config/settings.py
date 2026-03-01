@@ -120,6 +120,7 @@ REST_FRAMEWORK = {
     'DEFAULT_PAGINATION_CLASS': 'rest_framework.pagination.PageNumberPagination',
     'PAGE_SIZE': 20,
 }
+CELERY_BROKER_URL = "redis://redis:6379/0"
 
 # JWT Configuration
 SIMPLE_JWT = {
@@ -188,6 +189,13 @@ DATABASES = {
         'PASSWORD': os.environ.get('POSTGRES_PASSWORD', ''),
         'HOST': os.environ.get('POSTGRES_HOST', 'localhost'),
         'PORT': os.environ.get('POSTGRES_PORT', '5432'),
+    }
+}
+
+CACHES = {
+    'default' : {
+        'BACKEND': 'django.core.cache.backends.locmem.LocMemCache',
+        'LOCATION': 'unique-leaderboard-cache',
     }
 }
 
