@@ -24,7 +24,7 @@ RUN pip install --upgrade pip && pip install -r requirements.txt
 COPY . .
 
 # collection static files for production
-#RUN python manage.py collectstatic --noinput
+#RUN python manage.py collectstatic --noinput    (hashed for now becuase it caused some errors)
 
 # Running django devolopment mode
 CMD ["python","manage.py","runserver","0.0.0.0:8000"]

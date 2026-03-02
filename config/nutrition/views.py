@@ -52,8 +52,8 @@ class FoodViewSet(viewsets.ModelViewSet):
 
     @action(detail=False, methods=['get'])
     def search_food(self, request):
-        query = request.query_params.get('q', '').strip() #strip for removing spaces
-        #example : get /search_food/?q=chicken
+        query = request.query_params.get('food', '').strip() #strip for removing spaces
+        #example : get /search_food/?food=chicken
         if not query:
             return Response(
                 {'error': 'Please provide a search query (?q=...)'},

@@ -28,7 +28,7 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 
 # SECURITY WARNING: keep the secret key used in production secret!
 SECRET_KEY = os.environ.get('DJANGO_SECRET_KEY','fallback-key-for-dev-only')
-
+USDA_API_KEY = os.environ.get('USDA_API_KEY')
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = os.environ.get('DJANGO_DEBUG', 'False') == 'True'
 
@@ -119,7 +119,12 @@ REST_FRAMEWORK = {
     'DEFAULT_PAGINATION_CLASS': 'rest_framework.pagination.PageNumberPagination',
     'PAGE_SIZE': 20,
 }
-CELERY_BROKER_URL = "redis://redis:6379/0"
+CELERY_BROKER_URL ="redis://redis:6379/0"  # /0 redis db for task que
+CELERY_RESULT_BACKEND ="redis://redis:6379/1" # /1 redis db for results
+CELERY_ACCEPT_CONTENT = ["json"]
+CELERY_TASK_SERIALIZER = "json"
+CELERY_RESULT_SERIALIZER = "json"
+CELERY_TIMEZONE = 'Africa/Cairo'
 
 # JWT Configuration
 SIMPLE_JWT = {
