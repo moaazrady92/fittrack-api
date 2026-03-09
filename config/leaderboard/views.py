@@ -7,6 +7,6 @@ class LeaderboardView(APIView):
     permission_classes = [IsAuthenticated]
 
     def get(self,request):
-        data = LeaderboardService().get_leaderboard()
+        data = LeaderboardService.get_leaderboard()
         return Response(data)
     

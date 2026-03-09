@@ -4,14 +4,14 @@ from rest_framework.filters import SearchFilter , OrderingFilter
 from rest_framework.response import Response
 from rest_framework.decorators import action
 from django_filters.rest_framework import DjangoFilterBackend
-from .models import Exercise
-from .repositories.workout_repository import WorkoutRepository
+from workouts.models import Exercise
+from workouts.repositories.workout_repository import WorkoutRepository
 from .serializers import ExerciseSerializer, WorkoutSerializer
 from rest_framework import serializers
 from drf_yasg.utils import swagger_auto_schema
 from drf_yasg import openapi
 from rest_framework_simplejwt.authentication import JWTAuthentication
-from .services.workout_services import WorkoutService
+from workouts.services.workout_services import WorkoutService
 
 class WorkoutViewSet(viewsets.ModelViewSet):
     authentication_classes = [JWTAuthentication]

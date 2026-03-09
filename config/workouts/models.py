@@ -36,9 +36,15 @@ class Exercise(models.Model):
     weight = models.DecimalField(max_digits=6, decimal_places=2,help_text='weight in kg')
     rest_time = models.PositiveIntegerField(default=60,help_text='time in seconds')
     order = models.PositiveIntegerField(default=0)
-
     class Meta:
         ordering = ['order']
 
     def __str__(self):
         return f"{self.name} - {self.sets}x{self.reps} at {self.weight} kg"
+
+
+class MuscleGroup(models.Model):
+    name = models.CharField(max_length=100)
+
+    def __str__(self):
+        return self.name

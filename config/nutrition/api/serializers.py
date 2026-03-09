@@ -1,5 +1,5 @@
 from rest_framework import serializers
-from .models import Food
+from nutrition.models import Food
 
 class FoodSerializer(serializers.ModelSerializer):
     user = serializers.StringRelatedField(read_only=True)

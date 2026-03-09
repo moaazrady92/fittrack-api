@@ -1,5 +1,5 @@
 from datetime import timedelta
-from django.db.models import Sum
+from django.db.models import Sum, Count
 from django.utils import timezone
 from nutrition.models import Food
 
@@ -17,7 +17,7 @@ class FoodRepository:
     def weekly_food(user,date):
         today = timezone.now().date()
         week_ago = timezone.now() - timedelta(days=7)
-        return Food.objects.filter(user=user,date__lte=today,week_ago__gte=week_ago)
+        return Food.objects.filter(user=user,date__gte=week_ago,date__lte=today)
 
     @staticmethod
     def aggregate_total(queryset):
@@ -26,7 +26,7 @@ class FoodRepository:
             total_protein=Sum('protein'),
             total_carbs=Sum('carbs'),
             total_fats=Sum('fats'),
-            meal_count=Sum('id'),
+            meal_count=Count('id'),
         )
 
     @staticmethod

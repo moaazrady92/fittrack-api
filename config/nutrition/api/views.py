@@ -5,9 +5,9 @@ from rest_framework.response import Response
 from rest_framework.decorators import action
 from django_filters.rest_framework import DjangoFilterBackend
 from django.utils import timezone
-from .models import Food
+from nutrition.models import Food
 from .serializers import FoodSerializer
-from services.food_service import FoodService
+from nutrition.services.food_service import FoodService
 from rest_framework_simplejwt.authentication import JWTAuthentication
 
 

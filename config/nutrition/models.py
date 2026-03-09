@@ -14,7 +14,7 @@ class Food(models.Model):
     name = models.CharField(max_length=200)
     meal_type = models.CharField(max_length=3, choices=MEAL_TYPE)
     calories = models.PositiveIntegerField()
-    proteins = models.DecimalField(max_digits=6, decimal_places=2,help_text='Protein in grams')
+    protein = models.DecimalField(max_digits=6, decimal_places=2,help_text='Protein in grams')
     carbs = models.DecimalField(max_digits=6, decimal_places=2,help_text='Carbs in grams')
     fats = models.DecimalField(max_digits=6, decimal_places=2,help_text='Fats in grams')
     date =models.DateField()

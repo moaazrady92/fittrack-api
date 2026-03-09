@@ -1,8 +1,6 @@
 from datetime import date
-
 from rest_framework.exceptions import ValidationError
 
-from goals.models import Goal
 
 
 class GoalDomain:
@@ -14,9 +12,7 @@ class GoalDomain:
     @staticmethod
     def calculated_progress(current,amount,target):
         new_progress = current + amount
-        if new_progress < target:
-            return new_progress
-        return new_progress
+        return min(new_progress,target)
 
     @staticmethod
     def get_status(progress,target):

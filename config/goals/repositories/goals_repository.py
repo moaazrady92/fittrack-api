@@ -1,5 +1,6 @@
 from goals.models import Goal
 from django.utils import timezone
+from django.db.models import Q
 
 class GoalRepository:
 
@@ -23,13 +24,12 @@ class GoalRepository:
 
     @staticmethod
     def get_active_goals(user):
-        today = timezone.now.date()
-        return Goal.objects.filter(
-        user=user,
-        start_date__lte=today,
-        end_date__gte=today,
+        today = timezone.now().date()
+        return Goal.objects.filter(user=user).filter(
+        Q(start_date__lte=today) | Q(end_date__isnull=True),
+              Q(end_date__gte=today) | Q(start_date__isnull=True),
         )
 
     @staticmethod
     def get_completed_goals(user):
-        return Goal.objects.filter(user=user,status='Completed')
+        return Goal.objects.filter(user=user,status='COMPLETED')

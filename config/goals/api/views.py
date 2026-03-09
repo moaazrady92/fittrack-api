@@ -1,27 +1,26 @@
-from django.shortcuts import render
 from django_filters.rest_framework import DjangoFilterBackend
 from rest_framework import viewsets, status
 from rest_framework.decorators import action
 from rest_framework.response import Response
-
-from .repositories.goals_repository import GoalRepository
-from .services.goals_services import GoalService
+from goals.repositories.goals_repository import GoalRepository
+from goals.services.goals_services import GoalService
 from .serializers import GoalsSerializer
-from django.contrib.auth.models import User
 from rest_framework_simplejwt.authentication import JWTAuthentication
-from rest_framework import viewsets, permissions, filters , serializers
+from rest_framework import filters , serializers
+from rest_framework.permissions import IsAuthenticated
+
 
 class GoalsViewSet(viewsets.ModelViewSet):
     authentication_classes = [JWTAuthentication]
     serializer_class = GoalsSerializer
-    permission_classes = [permissions.IsAuthenticated]
+    permission_classes = [IsAuthenticated]
 
     filter_backends = [DjangoFilterBackend, filters.SearchFilter]
     filterset_fields = ['goal_type', 'status','date']
     search_fields = ['goal_type', 'status_choice']  # Search in food name or notes
 
     def get_queryset(self):
-        return GoalRepository.get_by_user(self.request.user)
+        return GoalRepository.get_user_goals(self.request.user)
 
     def perform_create(self, serializer):
         try:
@@ -37,7 +36,6 @@ class GoalsViewSet(viewsets.ModelViewSet):
     def perform_update(self, serializer):
         try:
             goal = GoalService.update_goal(
-                user=self.request.user,
                 goal=self.get_object(),
                 data=serializer.validated_data,
                 repo=GoalRepository,
@@ -54,7 +52,7 @@ class GoalsViewSet(viewsets.ModelViewSet):
         )
 
     @action(detail=False, methods=['get'])
-    def active(self, request):
+    def active(self):
         goals = GoalService.get_active_goals(
             user=self.request.user,
             repo=GoalRepository,
@@ -63,7 +61,7 @@ class GoalsViewSet(viewsets.ModelViewSet):
         return Response(serializer.data)
 
     @action(detail=False, methods=['post'])
-    def update_progress(self, request,pk=None):
+    def update_progress(self, request):
         goal = self.get_object()
         value = request.data.get('value')
 
@@ -73,10 +71,9 @@ class GoalsViewSet(viewsets.ModelViewSet):
             },status=status.HTTP_400_BAD_REQUEST)
 
         try:
-            updated_goal = GoalService.update_goal(
+            updated_goal = GoalService.update_progress(
                 goal=goal,
-                user=self.request.user,
-                value=value,
+                amount=float(value),
                 repo=GoalRepository,
             )
             serializer = self.get_serializer(updated_goal)

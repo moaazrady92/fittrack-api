@@ -1,6 +1,5 @@
 from django.db.models import Sum
 from django.utils import timezone
-from datetime import timedelta
 from nutrition.repository.food_repository import FoodRepository
 
 class FoodService:
@@ -50,9 +49,9 @@ class FoodService:
 
     @staticmethod
     def calorie_goal_progress(user,date):
-        food = FoodRepository.food_by_date(user,date)
+        food = FoodRepository.get_user_food_date(user,date)
 
-        total_calories = food.aggregate(total=sum([f.calories for f in food]))['total'] or 0
+        total_calories = food.aggregate(total=Sum('calories'))['total'] or 0
         daily_goal = user.daily_calorie_goal
 
         progress = min((total_calories / daily_goal) * 100, 100) if daily_goal > 0 else 0

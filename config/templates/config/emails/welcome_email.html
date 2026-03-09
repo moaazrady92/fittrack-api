@@ -1,0 +1,47 @@
+<!-- templates/emails/welcome_email.html -->
+<!DOCTYPE html>
+<html>
+<head>
+    <style>
+        body { font-family: Arial, sans-serif; line-height: 1.6; color: #333; }
+        .container { max-width: 600px; margin: 0 auto; padding: 20px; }
+        .header { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; padding: 20px; text-align: center; border-radius: 10px 10px 0 0; }
+        .content { background: #f9f9f9; padding: 30px; border-radius: 0 0 10px 10px; }
+        .button { display: inline-block; padding: 10px 20px; background: #667eea; color: white; text-decoration: none; border-radius: 5px; margin: 20px 0; }
+        .footer { text-align: center; margin-top: 20px; color: #666; font-size: 12px; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>Welcome to FitTrack! 🏋️</h1>
+        </div>
+        <div class="content">
+            <h2>Hello {{ username }}!</h2>
+            <p>We're excited to have you on board as a <strong>{{ role }}</strong>.</p>
+
+            {% if role == 'coach' %}
+            <p>Start creating amazing workout plans and help others achieve their fitness goals!</p>
+            {% else %}
+            <p>Browse our coaches' plans and start your fitness journey today!</p>
+            {% endif %}
+
+            <div style="text-align: center;">
+                <a href="{{ login_url }}" class="button">Get Started</a>
+            </div>
+
+            <p>Here's what you can do next:</p>
+            <ul>
+                <li>✅ Complete your profile</li>
+                <li>{% if role == 'coach' %}✅ Create your first workout plan{% else %}✅ Browse available plans{% endif %}</li>
+                <li>✅ Set your fitness goals</li>
+                <li>✅ Track your nutrition</li>
+            </ul>
+        </div>
+        <div class="footer">
+            <p>© 2024 FitTrack. All rights reserved.</p>
+            <p>Stay fit, stay healthy! 💪</p>
+        </div>
+    </div>
+</body>
+</html>

@@ -1,5 +1,5 @@
 from rest_framework import serializers
-from .models import Goal
+from goals.models import Goal
 
 class GoalsSerializer(serializers.ModelSerializer):
     user = serializers.StringRelatedField(read_only=True)

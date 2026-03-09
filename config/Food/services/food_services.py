@@ -9,7 +9,7 @@ class FoodAPIService:
 
     @staticmethod
     def search_food(query,page_size=5): # url parameters
-        cached = FoodCache.get_search(query, page_size)
+        cached = FoodCache.get_search(query)
         if cached:
             return cached
 
@@ -22,4 +22,6 @@ class FoodAPIService:
         response = requests.get(FoodAPIService.BASE_URL, params=params,timeout=10) # prevents the server from hanging forever
         response.raise_for_status() # automatically throws an error if anything goes wrong
 
-        return response.json()
+        data = response.json()
+        FoodCache.set_search(query,data)
+        return data

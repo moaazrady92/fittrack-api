@@ -1,5 +1,5 @@
 from rest_framework import serializers
-from .models import Workout ,Exercise
+from workouts.models import Workout ,Exercise
 
 
 class ExerciseSerializer(serializers.ModelSerializer):
